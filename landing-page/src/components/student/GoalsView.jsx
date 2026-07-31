@@ -12,6 +12,7 @@ import {
 export const GoalsView = () => {
   const {
     goals,
+    goalTemplates,
     selectedGoal,
     selectedGoalId,
     setSelectedGoalId,
@@ -19,6 +20,7 @@ export const GoalsView = () => {
     plan,
     addGoal,
     decidePlan,
+    regeneratePlan,
     busy,
   } = useApp();
   const [showWizard, setShowWizard] = useState(false);
@@ -27,11 +29,15 @@ export const GoalsView = () => {
   const submitGoal = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const template = goalTemplates.find(
+      (item) => item.slug === data.get('template_slug'),
+    );
     await addGoal({
       title: data.get('title'),
       raw_statement: data.get('raw_statement'),
       description: data.get('description'),
-      category: data.get('category'),
+      category: template?.category || null,
+      template_slug: data.get('template_slug'),
       target_date: data.get('target_date'),
       priority: Number(data.get('priority')),
       success_criteria: data
@@ -131,6 +137,16 @@ export const GoalsView = () => {
                   Approve plan v{plan.version}
                 </button>
               </div>
+            )}
+            {plan?.status === 'rejected' && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={regeneratePlan}
+                className="rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-500 disabled:opacity-50"
+              >
+                Regenerate plan
+              </button>
             )}
           </div>
 
@@ -306,7 +322,22 @@ export const GoalsView = () => {
               </label>
               <Field label="Supporting context" name="description" />
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Category" name="category" />
+                <label className="block text-xs font-medium text-gray-300">
+                  Goal template
+                  <select
+                    name="template_slug"
+                    required
+                    defaultValue=""
+                    className="mt-1.5 w-full rounded-lg border border-white/10 bg-black/40 p-3 text-sm text-white"
+                  >
+                    <option value="" disabled>Select a supported path</option>
+                    {goalTemplates.map((template) => (
+                      <option key={template.id} value={template.slug}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <Field label="Target date" name="target_date" type="date" required />
                 <label className="block text-xs font-medium text-gray-300">
                   Priority
@@ -331,7 +362,7 @@ export const GoalsView = () => {
               </label>
               <button
                 type="submit"
-                disabled={busy}
+                disabled={busy || goalTemplates.length === 0}
                 className="w-full rounded-lg bg-purple-600 py-3 text-sm font-bold text-white hover:bg-purple-500 disabled:opacity-60"
               >
                 {busy ? 'Building goal and plan...' : 'Create and generate plan'}

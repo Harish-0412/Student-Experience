@@ -42,7 +42,7 @@ export const StudentDashboard = () => {
     .slice(0, 3);
   const openRisk = risks.find((risk) => risk.status === 'open');
   const confidence = progress
-    ? Math.round(progress.goal_confidence * 100)
+    ? Math.round(progress.goal_confidence)
     : null;
   const mastered = masteryData.filter((item) => item.score >= 0.8).length;
 

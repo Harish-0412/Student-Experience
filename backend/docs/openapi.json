@@ -7243,7 +7243,7 @@
   "info": {
     "description": "AstraPath Phase 1-5 API. Contracts are versioned under /api/v1 and support exactly two roles: student and admin.",
     "title": "AstraPath API",
-    "version": "0.1.0"
+    "version": "0.5.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -8616,6 +8616,36 @@
         "summary": "Register",
         "tags": [
           "Authentication"
+        ]
+      }
+    },
+    "/api/v1/goal-templates": {
+      "get": {
+        "operationId": "list_goal_templates_api_v1_goal_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GoalTemplateRead"
+                  },
+                  "title": "Response List Goal Templates Api V1 Goal Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Goal Templates",
+        "tags": [
+          "goal-intelligence"
         ]
       }
     },

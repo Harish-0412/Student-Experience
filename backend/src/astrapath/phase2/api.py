@@ -110,6 +110,19 @@ def get_goal_graph(
     return _service(request, db, actor).graph(goal_id, actor)
 
 
+@phase2_router.get(
+    "/goal-templates",
+    response_model=list[GoalTemplateRead],
+    tags=["goal-intelligence"],
+)
+def list_goal_templates(
+    request: Request,
+    db: DatabaseSession,
+    actor: Actor,
+) -> list[GoalTemplateRead]:
+    return _service(request, db, actor).list_templates()
+
+
 @phase2_router.post(
     "/admin/competencies",
     response_model=CompetencyRead,

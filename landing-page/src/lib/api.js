@@ -119,8 +119,14 @@ export const api = {
     request('/student/profile', { method: 'PATCH', body: payload }),
 
   goals: async () => (await request('/student/goals')).items,
+  goalTemplates: () => request('/goal-templates'),
   createGoal: (payload) =>
     request('/student/goals', { method: 'POST', body: payload }),
+  activateGoal: (goalId, payload) =>
+    request(`/student/goals/${goalId}/activate`, {
+      method: 'POST',
+      body: payload,
+    }),
   clarifyGoal: (goalId, payload) =>
     request(`/goals/${goalId}/clarify`, { method: 'POST', body: payload }),
   assessFeasibility: (goalId, payload) =>

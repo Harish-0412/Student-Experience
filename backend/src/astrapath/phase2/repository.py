@@ -143,6 +143,12 @@ class Phase2Repository:
             )
         return template
 
+    def list_templates(self, *, active_only: bool = True) -> list[GoalTemplate]:
+        query = select(GoalTemplate).order_by(GoalTemplate.name)
+        if active_only:
+            query = query.where(GoalTemplate.active.is_(True))
+        return list(self.db.scalars(query).all())
+
     def get_template_by_id(self, template_id: uuid.UUID | None) -> GoalTemplate:
         template = self.db.get(GoalTemplate, template_id) if template_id else None
         if not template or not template.active:

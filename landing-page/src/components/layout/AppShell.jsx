@@ -159,7 +159,7 @@ export const AppShell = ({ children }) => {
                   </div>
                   {progress && (
                     <div className="text-[10px] text-emerald-400">
-                      {Math.round(progress.goal_confidence * 100)}% confidence
+                      {Math.round(progress.goal_confidence)}% confidence
                     </div>
                   )}
                 </div>

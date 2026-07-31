@@ -24,7 +24,12 @@ PHASE4_TABLE_NAMES = (
     "phase4_agent_runs",
 )
 
-STANDALONE_SHARED_TABLE_NAMES = ("users", "goals", "audit_logs")
+STANDALONE_SHARED_TABLE_NAMES = (
+    "users",
+    "goals",
+    "audit_chain_heads",
+    "audit_logs",
+)
 
 
 def create_phase4_schema(engine: Engine) -> None:

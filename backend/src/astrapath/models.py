@@ -317,6 +317,17 @@ class AuditLog(Base):
     event_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
 
 
+class AuditChainHead(Base):
+    __tablename__ = "audit_chain_heads"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    current_hash: Mapped[str | None] = mapped_column(String(64))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
 @event.listens_for(AuditLog, "before_update")
 def prevent_audit_update(_mapper: Any, _connection: Any, _target: AuditLog) -> None:
     raise ValueError("Audit records are immutable")

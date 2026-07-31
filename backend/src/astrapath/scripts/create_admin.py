@@ -1,6 +1,7 @@
 import argparse
 import getpass
 
+from pydantic import EmailStr, TypeAdapter, ValidationError
 from sqlalchemy import select
 
 from astrapath.audit import AuditService, system_audit_context
@@ -30,7 +31,10 @@ def main() -> None:
             raise SystemExit("Password must contain at least 12 characters")
         password_hash = hash_password(password)
 
-    email = args.email.strip().lower()
+    try:
+        email = str(TypeAdapter(EmailStr).validate_python(args.email.strip().lower()))
+    except ValidationError as exc:
+        raise SystemExit("Admin email must be a valid email address") from exc
     with SessionLocal() as db:
         if db.scalar(select(User.id).where(User.email == email)):
             raise SystemExit("A user with that email already exists")
@@ -59,4 +63,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

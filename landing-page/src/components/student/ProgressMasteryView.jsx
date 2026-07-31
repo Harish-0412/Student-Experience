@@ -7,7 +7,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-const percent = (value) => `${Math.round((value || 0) * 100)}%`;
+const percent = (value) => `${Math.round(value || 0)}%`;
+const ratioPercent = (value) => `${Math.round((value || 0) * 100)}%`;
 
 export const ProgressMasteryView = () => {
   const {
@@ -89,19 +90,19 @@ export const ProgressMasteryView = () => {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <span className="w-12 font-bold text-purple-300">
-                          {percent(mastery.score)}
+                          {ratioPercent(mastery.score)}
                         </span>
                         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
                           <div
                             className="h-full bg-purple-500"
-                            style={{ width: percent(mastery.score) }}
+                            style={{ width: ratioPercent(mastery.score) }}
                           />
                         </div>
                       </div>
                     </td>
                     <td className="p-4 text-xs">
-                      {percent(mastery.confidence_lower)} –{' '}
-                      {percent(mastery.confidence_upper)}
+                      {ratioPercent(mastery.confidence_lower)} –{' '}
+                      {ratioPercent(mastery.confidence_upper)}
                     </td>
                     <td className="p-4">{mastery.evidence_count}</td>
                     <td className="p-4 text-xs text-gray-400">

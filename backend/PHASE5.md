@@ -16,6 +16,7 @@ It adds no application role: authorization remains exactly `student` and
 - Request, response, rejection, replay, and latency metrics
 - Operational status across database, audit chain, agent registries, and bridge
 - Full append-only audit-chain verification
+- Transactional audit-head reservation for concurrent hash-chain writes
 - Load and resilience validation helpers
 
 ## Admin API
@@ -50,8 +51,8 @@ The Phase 5 end-to-end test covers authentication, Phase 2 intelligence,
 Phase 3 planning and task execution, Phase 4 progress/risk/replanning, and
 Phase 5 operational readiness in one journey.
 
-Phase 5 adds no database tables, so the Phase 4 migration remains Alembic head.
-The limiter, response replay cache, metrics, and circuit state are bounded per
-API process. Multi-replica production deployments should move shared rate-limit
-and idempotency state to Redis and export metrics and traces to the configured
-observability stack.
+The Phase 5 audit-head migration serializes hash reservations inside the same
+database transaction as each audited operation. The limiter, response replay
+cache, metrics, and circuit state are bounded per API process. Multi-replica
+production deployments should move shared rate-limit and idempotency state to
+Redis and export metrics and traces to the configured observability stack.

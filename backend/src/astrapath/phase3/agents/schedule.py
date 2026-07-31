@@ -109,7 +109,8 @@ class ScheduleTimeBudgetAgent:
             for slot in candidates:
                 if remaining <= 0:
                     break
-                minutes = min(remaining, slot.minutes)
+                available_minutes = slot.minutes
+                minutes = min(remaining, available_minutes)
                 if minutes <= 0:
                     continue
                 ends_at = slot.starts_at + timedelta(minutes=minutes)
@@ -124,7 +125,10 @@ class ScheduleTimeBudgetAgent:
                         energy_level=slot.energy_level,
                     )
                 )
-                slot.used = True
+                if minutes == available_minutes:
+                    slot.used = True
+                else:
+                    slot.starts_at = ends_at
                 remaining -= minutes
                 task_ends.append(ends_at)
             if task_ends:

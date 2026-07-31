@@ -8,7 +8,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from astrapath.agents.registry import AgentRegistry
-from astrapath.models import AuditLog
+from astrapath.models import AuditChainHead, AuditLog
 from astrapath.phase4.registry import Phase4Registry
 from astrapath.phase5.contracts import (
     AuditVerification,
@@ -71,6 +71,13 @@ class OperationalService:
                     reason="event_hash_mismatch",
                 )
             previous_hash = record.event_hash
+        head = db.get(AuditChainHead, 1)
+        if head and head.current_hash != previous_hash:
+            return AuditVerification(
+                valid=False,
+                checked_records=len(records),
+                reason="chain_head_mismatch",
+            )
         return AuditVerification(valid=True, checked_records=len(records))
 
     def status(self, db: Session, app: FastAPI) -> OperationalStatus:

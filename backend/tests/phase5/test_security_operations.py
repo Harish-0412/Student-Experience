@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 
 import pytest
@@ -223,3 +224,31 @@ def test_operations_require_admin_and_verify_audit_chain(
     assert tampered.status_code == 200
     assert tampered.json()["valid"] is False
     assert tampered.json()["reason"] == "event_hash_mismatch"
+
+
+def test_concurrent_audited_admin_reads_preserve_the_chain(
+    app_client: tuple[TestClient, object],
+    session_factory: sessionmaker[Session],
+) -> None:
+    client, _app = app_client
+    _admin, admin_headers = create_admin(
+        app_client,
+        session_factory,
+        email="concurrent-audit-admin@example.com",
+    )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        responses = list(
+            executor.map(
+                lambda path: client.get(path, headers=admin_headers),
+                ["/api/v1/admin/users", "/api/v1/admin/agents"],
+            )
+        )
+
+    assert all(response.status_code == 200 for response in responses)
+    verification = client.post(
+        "/api/v1/admin/operations/audit/verify",
+        headers=admin_headers,
+    )
+    assert verification.status_code == 200
+    assert verification.json()["valid"] is True

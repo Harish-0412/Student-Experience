@@ -152,7 +152,11 @@ async def run_goal_clarification_workflow(
     builder.add_edge("clarification", "governance")
     builder.add_edge("governance", END)
     graph = builder.compile()
-    state = await graph.ainvoke({"messages": []})
+    initial_state: GoalWorkflowGraphState = {"messages": []}
+    state = cast(
+        GoalWorkflowGraphState,
+        await cast(Any, graph).ainvoke(initial_state),
+    )
 
     clarification = AgentResult.model_validate(state["clarification_result"])
     governance = AgentResult.model_validate(state["governance_result"])
@@ -167,7 +171,7 @@ async def run_goal_clarification_workflow(
         workflow.current_step = "phase_2_feasibility"
         workflow.completed_at = datetime.now(UTC)
     workflow.version += 1
-    workflow.state_data = state
+    workflow.state_data = cast(dict[str, Any], state)
     audit.record(
         db,
         audit_context,

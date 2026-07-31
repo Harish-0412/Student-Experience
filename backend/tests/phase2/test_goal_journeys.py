@@ -15,6 +15,22 @@ def seed_student_skills(env: dict, skills: list[dict]) -> None:
         db.commit()
 
 
+def test_student_can_list_active_goal_templates(phase2_env: dict) -> None:
+    response = phase2_env["client"].get(
+        "/api/v1/goal-templates",
+        headers=headers(phase2_env["ids"]["student"], "student"),
+    )
+
+    assert response.status_code == 200
+    templates = response.json()
+    assert {template["slug"] for template in templates} == {
+        "calculus-exam",
+        "data-structures-interview",
+        "machine-learning-internship",
+    }
+    assert all(template["active"] for template in templates)
+
+
 def run_until_skill_gap(
     env: dict,
     goal_key: str,

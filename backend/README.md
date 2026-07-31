@@ -13,6 +13,7 @@ application roles: `student` and `admin`.
 - Versioned goals with validated lifecycle transitions
 - Append-only, hash-chained audit records
 - Goal clarification, feasibility, skill-gap, and competency graph generation
+- Authenticated discovery of active, admin-managed goal templates
 - Milestones, tasks, constrained scheduling, calendar views, and daily plans
 - Explainable decision cards and student plan approval/edit/rejection
 - Resource curation, focus sessions, contextual tutoring, and assessments

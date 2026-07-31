@@ -359,6 +359,14 @@ class GoalIntelligenceService:
         )
         return GoalTemplateRead.model_validate(record)
 
+    def list_templates(self) -> list[GoalTemplateRead]:
+        self.repository.seed_catalog()
+        self.db.commit()
+        return [
+            GoalTemplateRead.model_validate(record)
+            for record in self.repository.list_templates()
+        ]
+
     @staticmethod
     def _require_admin(actor: User) -> None:
         if actor.role != Role.ADMIN:

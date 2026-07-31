@@ -17,7 +17,12 @@ const optional = async (operation, fallback = null) => {
   try {
     return await operation();
   } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return fallback;
+    if (
+      error instanceof ApiError &&
+      (error.status === 404 || error.status === 409)
+    ) {
+      return fallback;
+    }
     throw error;
   }
 };
@@ -47,6 +52,7 @@ export const AppProvider = ({ children }) => {
   const [error, setError] = useState('');
 
   const [studentProfile, setStudentProfile] = useState(null);
+  const [goalTemplates, setGoalTemplates] = useState([]);
   const [goals, setGoals] = useState([]);
   const [selectedGoalId, setSelectedGoalId] = useState(null);
   const [goalGraph, setGoalGraph] = useState(null);
@@ -86,8 +92,12 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const loadStudentBase = useCallback(async () => {
-    const profile = await optional(api.profile, null);
+    const [profile, templates] = await Promise.all([
+      optional(api.profile, null),
+      api.goalTemplates(),
+    ]);
     setStudentProfile(profile);
+    setGoalTemplates(templates);
     if (!profile) {
       setGoals([]);
       setSelectedGoalId(null);
@@ -109,7 +119,7 @@ export const AppProvider = ({ children }) => {
     }
     const progressRequest = async () => {
       const existing = await optional(() => api.progress(goalId), null);
-      return existing || api.rebuildProgress(goalId);
+      return existing || optional(() => api.rebuildProgress(goalId), null);
     };
     const [
       graph,
@@ -300,6 +310,7 @@ export const AppProvider = ({ children }) => {
       setUser(null);
       setAppMode('landing');
       setStudentProfile(null);
+      setGoalTemplates([]);
       setGoals([]);
       setSelectedGoalId(null);
       resetGoalData();
@@ -347,7 +358,8 @@ export const AppProvider = ({ children }) => {
         0.5,
       );
       await api.clarifyGoal(created.id, {
-        raw_goal: created.raw_statement,
+        raw_goal: `${created.title}. ${created.raw_statement}`,
+        template_slug: values.template_slug,
         target_date: created.target_date,
         weekly_hours: weeklyHours,
       });
@@ -386,6 +398,34 @@ export const AppProvider = ({ children }) => {
             : 'Student rejected the generated plan in the portal',
       });
       setPlan(updated);
+      const currentGoal = goals.find((goal) => goal.id === selectedGoalId);
+      if (decision === 'approve' && currentGoal?.status === 'draft') {
+        const activatedGoal = await api.activateGoal(selectedGoalId, {
+          expected_version: currentGoal.version,
+          reason: 'Student approved the first executable learning plan',
+        });
+        setGoals((current) =>
+          current.map((goal) =>
+            goal.id === activatedGoal.id ? activatedGoal : goal,
+          ),
+        );
+      }
+    } catch (requestError) {
+      setError(messageFor(requestError));
+      throw requestError;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const regeneratePlan = async () => {
+    if (!selectedGoalId) return null;
+    setBusy(true);
+    setError('');
+    try {
+      const generatedPlan = await api.generatePlan(selectedGoalId, {});
+      setPlan(generatedPlan);
+      return generatedPlan;
     } catch (requestError) {
       setError(messageFor(requestError));
       throw requestError;
@@ -594,7 +634,24 @@ export const AppProvider = ({ children }) => {
   const verifyAudit = async () => {
     const verification = await api.verifyAudit();
     setOperationsStatus((current) =>
-      current ? { ...current, audit: verification } : current,
+      current
+        ? {
+            ...current,
+            status: verification.valid ? current.status : 'degraded',
+            audit: verification,
+            components: current.components.map((component) =>
+              component.name === 'audit_chain'
+                ? {
+                    ...component,
+                    status: verification.valid ? 'ready' : 'degraded',
+                    detail: verification.valid
+                      ? `${verification.checked_records} records verified`
+                      : verification.reason || 'verification failed',
+                  }
+                : component,
+            ),
+          }
+        : current,
     );
     return verification;
   };
@@ -673,6 +730,7 @@ export const AppProvider = ({ children }) => {
     refreshPortal,
     studentProfile,
     completeOnboarding,
+    goalTemplates,
     goals,
     selectedGoal,
     selectedGoalId,
@@ -681,6 +739,7 @@ export const AppProvider = ({ children }) => {
     competencies,
     plan,
     decidePlan,
+    regeneratePlan,
     addGoal,
     dailyPlan,
     tasks,
